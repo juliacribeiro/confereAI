@@ -9,12 +9,13 @@ async function getConfig() {
   return { endpoint, token };
 }
 
-// Ícones
+// Ícones (inclui "unknown" para INCERTO)
 const ICONS = {
-  idle:    { 16: "img/block_16.png",  32: "img/block_32.png",  48: "img/block_48.png",  128: "img/block_128.png"  },
-  loading: { 16: "img/search_16.png", 32: "img/search_32.png", 48: "img/search_48.png", 128: "img/search_128.png" },
-  ok:      { 16: "img/check_16.png",  32: "img/check_32.png",  48: "img/check_48.png",  128: "img/check_128.png"  },
-  error:   { 16: "img/close_16.png",  32: "img/close_32.png",  48: "img/close_48.png",  128: "img/close_128.png"  }
+  idle:     { 16: "img/block_16.png",    32: "img/block_32.png",    48: "img/block_48.png",    128: "img/block_128.png"    },
+  loading:  { 16: "img/search_16.png",   32: "img/search_32.png",   48: "img/search_48.png",   128: "img/search_128.png"   },
+  ok:       { 16: "img/check_16.png",    32: "img/check_32.png",    48: "img/check_48.png",    128: "img/check_128.png"    },
+  error:    { 16: "img/close_16.png",    32: "img/close_32.png",    48: "img/close_48.png",    128: "img/close_128.png"    },
+  unknown:  { 16: "img/question_16.png", 32: "img/question_32.png", 48: "img/question_48.png", 128: "img/question_128.png" }
 };
 
 async function setIcon(status = "idle", tabId) {
@@ -32,26 +33,9 @@ async function setBadge(text = "", color = "#666", tabId) {
   }
 }
 
-// Normaliza strings (remove acentos/hífens e põe minúsculas)
-function norm(s) {
-  return (s || "")
-    .normalize("NFD").replace(/\p{Diacritic}/gu, "")
-    .replace(/[-–—]/g, " ")
-    .toLowerCase();
-}
-function isSuspectClass(cl) {
-  const c = norm(cl);
-  // qualquer menção a fake ou "nao/não confiavel"
-  return /fake|nao confiavel|nao\s+confiavel|nao-confiavel|nao\s*confiavel/.test(c);
-}
-
 // ---------- helpers de payload/armazenamento ----------
 function buildPayload({ url, tabId }) {
-  return {
-    url,
-    tabId,
-    capturedAt: new Date().toISOString()
-  };
+  return { url, tabId, capturedAt: new Date().toISOString() };
 }
 async function saveLastPayload(payload) {
   const { payloadHistory = [] } = await chrome.storage.local.get(["payloadHistory"]);
@@ -62,10 +46,9 @@ async function saveLastPayload(payload) {
 // ---------- envio p/ API /analyze ----------
 async function sendToApi(url, tabId) {
   const { endpoint, token } = await getConfig();
-  const payload = buildPayload({ url, tabId });  // ainda salvo localmente p/ troubleshooting
+  const payload = buildPayload({ url, tabId });
 
   if (!endpoint) {
-    console.warn("[ext] Endpoint não configurado.");
     await saveLastPayload(payload);
     await chrome.storage.local.set({
       lastStatus: "error",
@@ -83,26 +66,22 @@ async function sendToApi(url, tabId) {
     await setIcon("loading", tabId);
     await setBadge("…", "#666", tabId);
 
-    // salva o JSON local ANTES (debug)
     await saveLastPayload(payload);
 
-    // >>> o app.py espera { url } <<<
     const headers = { "Content-Type": "application/json" };
     if (token) headers["Authorization"] = `Bearer ${token}`;
 
     const res = await fetch(endpoint, {
       method: "POST",
       headers,
-      body: JSON.stringify({ url })   // <<< compatível com /analyze
+      body: JSON.stringify({ url })
     });
 
-    // trata HTTP error
     if (!res.ok) {
       const txt = await res.text().catch(() => "");
       throw new Error(`HTTP ${res.status} ${txt || ""}`.trim());
     }
 
-    // guarda o resultado retornado (titulo, resumo, classificacao, explicacao)
     let result = null;
     try { result = await res.json(); } catch { result = null; }
 
@@ -114,13 +93,19 @@ async function sendToApi(url, tabId) {
       lastResult: result
     });
 
-    // Ícone alinhado com a classificação retornada
-    const suspect = isSuspectClass(result?.classificacao);
-    await setIcon(suspect ? "error" : "ok", tabId);
-    await setBadge("", "#666", tabId);
+    const cls = Number(result?.classificacao);
+    if (cls === 1) {
+      await setIcon("error", tabId);    // provavelmente com fake news
+      await setBadge("!", "#C0392B", tabId);
+    } else if (cls === 2) {
+      await setIcon("unknown", tabId);  // indeciso
+      await setBadge("?", "#666", tabId);
+    } else {
+      await setIcon("ok", tabId);       // provavelmente sem fake news
+      await setBadge("", "#666", tabId);
+    }
 
   } catch (e) {
-    console.error("[ext] Falha ao enviar:", e);
     await chrome.storage.local.set({
       lastStatus: "error",
       lastUrl: url,
@@ -128,7 +113,6 @@ async function sendToApi(url, tabId) {
       lastError: String(e && e.message ? e.message : e),
       lastResult: null
     });
-    // erro de rede/HTTP → ícone de erro
     await setIcon("error", tabId);
     await setBadge("!", "#C0392B", tabId);
   }

@@ -56,6 +56,7 @@ def analyze():
     answer = verificar_fake_news(full_text)
 
     # 4) VirusTotal - enviar URL para análise
+    stats = {}
     try:
         post_response = requests.post(
             "https://www.virustotal.com/api/v3/urls",
