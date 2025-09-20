@@ -94,7 +94,7 @@ async function sendToApi(url, tabId) {
     });
 
     const cls = Number(result?.classificacao);
-    if (cls === 1) {
+    if (cls === 0) {
       await setIcon("error", tabId);    // provavelmente com fake news
       await setBadge("!", "#C0392B", tabId);
     } else if (cls === 2) {

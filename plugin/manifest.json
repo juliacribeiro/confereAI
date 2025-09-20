@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "Capturar URL ativa",
+  "name": "Confere.AI",
   "version": "1.0.0",
   "description": "Lê a URL da aba ativa e envia para uma API sempre que mudar.",
   "permissions": ["tabs", "webNavigation", "storage"],
@@ -9,7 +9,7 @@
     "service_worker": "background.js"
   },
   "action": {
-    "default_title": "Capturar URL",
+    "default_title": "Confere.AI",
     "default_popup": "popup.html",
     "default_icon": {
       "16": "img/block_16.png",

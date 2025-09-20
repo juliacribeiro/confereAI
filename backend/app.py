@@ -100,14 +100,5 @@ def analyze():
     }
 })
 
-
-@app.route("/news", methods=["GET"])
-def news():
-    return jsonify({
-        "news": [
-            {"title": "Ex-delegado executado: terceiro suspeito de envolvimento no crime é preso", "url": "https://www.cnnbrasil.com.br/nacional/sudeste/sp/ex-delegado-executado-terceiro-suspeito-de-envolvimento-no-crime-e-preso/"},
-        ]
-    })
-
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)

@@ -19,7 +19,7 @@ function setExplanation(explicacao, cls) {
   if (items.length === 0) return;
 
   whyWrap.style.display = "block";
-  whyBtn.textContent = (cls === 1) ? "Ver detalhes do erro" : "Ver justificativa";
+  whyBtn.textContent = (cls === 0) ? "Ver detalhes do erro" : "Ver justificativa";
   whyBox.innerHTML = "<ul style='margin:0; padding-left:18px'>" +
     items.map(t => `<li>${String(t)}</li>`).join("") +
     "</ul>";
@@ -47,19 +47,29 @@ function renderStatus({ lastStatus, lastSentAt, lastError, lastResult }) {
   const titulo = lastResult?.titulo ? ` · ${lastResult.titulo}` : "";
   const cls = Number(lastResult?.classificacao);
   const explicacao = lastResult?.explicacao;
+  // (popup.js) — dentro de renderStatus, após obter cls/explicacao
+  const vt = lastResult?.virustotal || {};
+  const vtMal = Number(vt.malicioso ?? -1);
+  const vtSusp = Number(vt.suspeito ?? -1);
+  const vtHarmless = Number(vt.inofensivo ?? -1);
+  // soma "malicioso + suspeito" quando ambos existem (>=0)
+  const vtBadSum = (vtMal >= 0 ? vtMal : 0) + (vtSusp >= 0 ? vtSusp : 0);
 
   if (lastStatus === "ok") {
-    if (cls === 1) {
-      // provavelmetne com fake news
+    if (cls === 0) {
+      // provavelmente com fake news
       statusEl.classList.add("warn");
       const items = normalizeJustificativa(explicacao);
       const resumo = items.length ? ` — Erro: ${items[0]}` : "";
-      statusEl.innerHTML = `⚠️ <strong>provavelmetne com fake news</strong>${titulo}${resumo ? ` <span class="mono">${resumo}</span>` : ""}`;
+      const vtNote = (vtBadSum > 59) ? ` <span>O conteúdo aparenta ser suspeito/malicioso.</span>` : "";
+      statusEl.innerHTML = `⚠️ <strong>Provavelmente com inconsistências nas informações</strong>${titulo}${vtNote}`;
       setExplanation(explicacao, cls);
-    } else if (cls === 0) {
+    } else if (cls === 1) {
       // provavelmente sem fake news
       statusEl.classList.add("ok");
-      statusEl.innerHTML = `✅ <strong>provavelmente sem fake news</strong>${titulo}`;
+      const vtSafe = (vtHarmless > 50) ? `<span>O conteúdo aparenta ser inofensivo.</span>` : "";
+      statusEl.classList.add("ok");
+      statusEl.innerHTML = `✅ <strong>Provavelmente sem fake news</strong>${titulo}${vtSafe}`;
       setExplanation(explicacao, cls);
     } else if (cls === 2) {
       // incerto
