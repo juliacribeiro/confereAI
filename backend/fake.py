@@ -18,19 +18,20 @@ def verificar_fake_news(texto: str) -> dict:
     prompt = f"""
 Você é um verificador de fatos. Vou te enviar um texto de notícia ou postagem de rede social. Sua tarefa é:
 
-1. Determinar se o texto é **provavelmente verdadeiro**, **provavelmente falso** ou **incerto**.
-2. Retornar apenas **um valor numérico** seguido de **uma justificativa em parágrafo**:
+1. Determinar se o texto é *provavelmente verdadeiro, **provavelmente falso, **provavelmente enviesado* ou *incerto*.
+2. Retornar apenas *um valor numérico* seguido de *uma justificativa em parágrafo*:
    - 0 = provavelmente falso ou enviesado
    - 1 = provavelmente verdadeiro
    - 2 = incerto
-3. No parágrafo de justificativa, explique claramente os motivos da avaliação, apontando informações inconsistentes, exageros ou manipulações, e, se possível, inclua links de fact-checking confiáveis. Se o valor for provavelmente falso ou enviesado mas se referir a partes específicas do artigo, retorne um parágrafo de justificativa para cada trecho.
+3. No primeiro parágrafo de justificativa, explique clara e sucintamente os motivos da avaliação, apontando informações inconsistentes, exageros ou manipulações, e, se possível, inclua links de fact-checking confiáveis. Se o valor for provavelmente falso ou enviesado mas se referir a partes específicas do artigo, retorne mais parágrafos de justificativa para cada parte diferente (separados por quebras de linha).
 4. Lembre-se de verificar trecho por trecho, qualquer informação falsa, mesmo que não seja o assunto principal do texto, deve tornar o valor provavelmente falso e ser justificada.
+5. Se a conclusão não for clara prefira a utilização de "incerto".
 
 Aqui está o texto a ser analisado:\n\n{texto}\n\n
 
-**Formato de resposta esperado (JSON):**
+*Formato de resposta esperado (JSON):*
 VALOR: <0|1|2>
-JUSTIFICATIVA: ["<justificativa 1>", "<justificativa 2>", ...]
+JUSTIFICATIVA: ["<justificativa 1>", "<justificativa 2>", ...]
 """
 
     resposta = client.chat.completions.create(
