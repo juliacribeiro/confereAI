@@ -82,7 +82,8 @@ def analyze():
             stats = attributes.get("stats", {})
 
     except Exception as e:
-        vt_result = {"error": f"Falha ao consultar VirusTotal: {e}"}
+        return jsonify({"error": f"Falha ao consultar VirusTotal: {e}"})
+
 
     # 5) Retorno JSON
 
