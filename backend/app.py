@@ -1,6 +1,18 @@
 from flask import Flask, request, jsonify
 import requests
 from bs4 import BeautifulSoup
+from dotenv import load_dotenv
+import os
+import time
+
+load_dotenv()
+API_KEY_VIRUSTOTAL = os.getenv("API_KEY_VIRUSTOTAL")
+
+app = Flask(__name__)
+
+load_dotenv()
+
+API_KEY_VIRUSTOTAL = os.getenv("KEY_VIRUSTOTAL")
 
 app = Flask(__name__)
 
@@ -15,34 +27,81 @@ def analyze():
 
     # 1) Extrair texto da notícia
     try:
-        headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36"}
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36"
+        }
         resp = requests.get(url, timeout=10, headers=headers)
         soup = BeautifulSoup(resp.text, "html.parser")
+
         title = soup.find("title").get_text() if soup.find("title") else ""
-        paragraphs = [p.get_text() for p in soup.find_all("p")]
-        full_text = " ".join(paragraphs)
-        print(full_text)
+
+        candidate_paragraphs = soup.find("article").find_all("p") if (article := soup.find("article")) else soup.find_all("p")
+
+        paragraphs = []
+        for p in candidate_paragraphs:
+            if p.string and p.string.strip():  
+                paragraphs.append(p.string.strip())
+            else:
+                text = p.get_text(strip=True)
+                if len(text.split()) > 5:
+                    paragraphs.append(text)
+
+        full_text = " ".join(paragraphs).strip()
+
     except Exception as e:
         return jsonify({"error": f"Falha ao acessar URL: {e}"}), 500
 
-    # 2) Se texto muito longo → resumir (mock por enquanto)
-    if len(full_text) > 3000:
-        # MELHORAR ISSO AQUI
-        resumo = full_text[:500] + "..."
-    else:
-        resumo = full_text
+    # 2) Resumir (mock)
+    resumo = full_text[:500] + "..." if len(full_text) > 500 else full_text
 
-    # 3) Validação (mock por enquanto, IA entra aqui depois)
+    # 3) Classificação (mock)
     classificacao = "Possível Fake" if "!" in resumo else "Confiável"
     explicacao = "Mock: Classificação baseada em regra simples."
 
-    # 4) Retorno JSON
+    # 4) VirusTotal - enviar URL para análise
+    try:
+        post_response = requests.post(
+            "https://www.virustotal.com/api/v3/urls",
+            headers={"x-apikey": API_KEY_VIRUSTOTAL},
+            data={"url": url}
+        )
+
+        if post_response.status_code != 200:
+            vt_result = {"error": "Falha ao enviar URL para análise."}
+        else:
+            analysis_id = post_response.json()["data"]["id"]
+
+            # Consultar resultado da análise
+            # Pode ser necessário aguardar alguns segundos
+            time.sleep(5)
+
+            get_response = requests.get(
+                f"https://www.virustotal.com/api/v3/analyses/{analysis_id}",
+                headers={"x-apikey": API_KEY_VIRUSTOTAL}
+            )
+            vt_result = get_response.json()
+            data = vt_result.get("data", {})
+            attributes = data.get("attributes", {})
+            stats = attributes.get("stats", {})
+
+    except Exception as e:
+        vt_result = {"error": f"Falha ao consultar VirusTotal: {e}"}
+
+    # 5) Retorno JSON
+
     return jsonify({
-        "titulo": title,
-        "resumo": resumo[:500],
-        "classificacao": classificacao,
-        "explicacao": explicacao
-    })
+    "titulo": title,
+    "resumo": resumo,
+    "classificacao": classificacao,
+    "explicacao": explicacao,
+    "virustotal": {
+        "malicioso": stats.get("malicious", 0),
+        "suspeito": stats.get("suspicious", 0),
+        "nao_detectado": stats.get("undetected", 0),
+        "inofensivo": stats.get("harmless", 0),
+    }
+})
+
 
 @app.route("/news", methods=["GET"])
 def news():
