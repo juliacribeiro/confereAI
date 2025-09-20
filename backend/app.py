@@ -4,6 +4,7 @@ from bs4 import BeautifulSoup
 from dotenv import load_dotenv
 import os
 import time
+from fake import verificar_fake_news
 
 load_dotenv()
 API_KEY_VIRUSTOTAL = os.getenv("API_KEY_VIRUSTOTAL")
@@ -51,12 +52,9 @@ def analyze():
     except Exception as e:
         return jsonify({"error": f"Falha ao acessar URL: {e}"}), 500
 
-    # 2) Resumir (mock)
-    resumo = full_text[:500] + "..." if len(full_text) > 500 else full_text
+    answer = verificar_fake_news(full_text)
 
-    # 3) Classificação (mock)
-    classificacao = "Possível Fake" if "!" in resumo else "Confiável"
-    explicacao = "Mock: Classificação baseada em regra simples."
+    print(answer)
 
     # 4) VirusTotal - enviar URL para análise
     try:
@@ -91,9 +89,8 @@ def analyze():
 
     return jsonify({
     "titulo": title,
-    "resumo": resumo,
-    "classificacao": classificacao,
-    "explicacao": explicacao,
+    "classificacao": answer["valor"],
+    "explicacao": answer["justificativa"],
     "virustotal": {
         "malicioso": stats.get("malicious", 0),
         "suspeito": stats.get("suspicious", 0),
