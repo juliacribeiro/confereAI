@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 import os
 import time
 from fake import verificar_fake_news
+import json
 
 load_dotenv()
 API_KEY_VIRUSTOTAL = os.getenv("API_KEY_VIRUSTOTAL")
@@ -53,8 +54,6 @@ def analyze():
         return jsonify({"error": f"Falha ao acessar URL: {e}"}), 500
 
     answer = verificar_fake_news(full_text)
-
-    print(answer)
 
     # 4) VirusTotal - enviar URL para análise
     try:

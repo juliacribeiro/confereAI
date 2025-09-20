@@ -42,8 +42,6 @@ JUSTIFICATIVA: ["<justificativa 1>", "<justificativa 2>", ...]
         temperature=0,
     )
 
-    print(resposta)
-
     conteudo = resposta.choices[0].message.content.strip()
 
     valor, justificativa = None, []
