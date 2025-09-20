@@ -16,7 +16,7 @@ Extensão do Chrome que acessa a URL da sua aba atual em tempo real, analisa o c
 ## 🚀 Executando
 
 ### 1. Configurando o ambiente
-Após clonar o repositório, duplique o arquivo sample.env, renomeie para .env e substitua os valores das chaves pelos valores verdadeiros
+Após clonar o repositório, duplique o arquivo sample.env, renomeie para .env e substitua os valores das chaves por valores válidos. Em seguida, execute o trecho abaixo para rodar localmente o backend.
 
 ```bash
 python -m venv venv  
@@ -27,12 +27,12 @@ pip install dotenv flask requests beautifulsoup4 openai
 python app.py
 ```
 
-### 2. Configurando o ambiente
+### 2. Executando o projeto
 
-- Abra o Google Chrome e acesse: <chrome://extensions/>
+- Abra o Google Chrome e acesse: <a href="chrome://extensions/">chrome://extensions/</a>
 - Ative o Modo desenvolvedor (canto superior direito).
 - Clique em Carregar sem compactação (canto superior esquerdo).
-- Selecione a pasta plugin deste repositório.
+- Selecione a pasta `plugin` deste repositório.
 - Para uma melhor experiência, fixe a extensão na barra do navegador.
 
 > Pronto! A extensão já está corretamente configurada e te mostrará os resultados da análise sobre a veracidade das notícias que você está lendo. Lembre-se que a Inteligência Artificial não garante 100% de veracidade e a melhor maneira de conferir uma notícia é indo atrás de fontes oficiais, a extensão serve como **suporte**.
