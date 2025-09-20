@@ -93,10 +93,10 @@ def analyze():
     "classificacao": answer["valor"],
     "explicacao": answer["justificativa"],
     "virustotal": {
-        "malicioso": stats.get("malicious", 0),
-        "suspeito": stats.get("suspicious", 0),
-        "nao_detectado": stats.get("undetected", 0),
-        "inofensivo": stats.get("harmless", 0),
+        "malicioso": stats.get("malicious", -1),
+        "suspeito": stats.get("suspicious", -1),
+        "nao_detectado": stats.get("undetected", -1),
+        "inofensivo": stats.get("harmless", -1),
     }
 })
 
