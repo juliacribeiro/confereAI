@@ -2,23 +2,30 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <title>Capturar URL</title>
+    <title>Confere.AI</title>
     <style>
       body { font-family: system-ui, Arial; margin: 0; padding: 12px; min-width: 320px; }
       h3 { margin: 0 0 8px; font-size: 16px; }
-      .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; background:#f6f6f6; padding:8px; border-radius:8px; border:1px solid #eee; word-break: break-all; }
+      .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; background:#f6f6f6; padding:8px; border-radius:8px; border:1px solid #eee; white-space: pre-wrap; }
       .muted { color: #666; font-size: 12px; }
+      .ok { color: #0a7; }
+      .warn { color: #e67; }
+      #whyBtn { margin-top:6px; font-size:12px; padding:6px 10px; border-radius:8px; border:1px solid #ddd; background:#fafafa; cursor:pointer; }
+      #whyBtn:hover { background:#f2f2f2; }
     </style>
   </head>
   <body>
     <h3>Confere.AI</h3>
     <p class="muted">A URL da aba ativa é enviada automaticamente à Confere.AI para checagem de fake news.</p>
 
-    <!-- apagar isso depoiss, assim como o "id=url" e a class="mono" -->
-    <div id="url" class="mono">—</div>
-
     <div class="muted" style="margin-top:8px;">Último envio:</div>
     <div id="status" class="muted">—</div>
+
+    <!-- Aparece somente quando NÃO confiável -->
+    <div id="whyWrap" style="display:none;">
+      <button id="whyBtn" type="button">Por que pode não ser confiável?</button>
+      <div id="whyBox" class="mono" style="display:none; margin-top:6px;"></div>
+    </div>
 
     <script src="popup.js"></script>
   </body>
