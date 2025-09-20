@@ -15,22 +15,38 @@ def analyze():
 
     # 1) Extrair texto da notícia
     try:
-        headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36"}
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36"
+        }
         resp = requests.get(url, timeout=10, headers=headers)
         soup = BeautifulSoup(resp.text, "html.parser")
+
         title = soup.find("title").get_text() if soup.find("title") else ""
-        paragraphs = [p.get_text() for p in soup.find_all("p")]
-        full_text = " ".join(paragraphs)
+
+        candidate_paragraphs = article.find_all("p") if (article := soup.find("article")) else soup.find_all("p")
+
+        paragraphs = []
+        for p in candidate_paragraphs:
+            if p.string and p.string.strip():  
+                paragraphs.append(p.string.strip())
+            else:
+                text = p.get_text(strip=True)
+                if len(text.split()) > 5:
+                    paragraphs.append(text)
+
+        full_text = " ".join(paragraphs).strip()
+        print("****************")
         print(full_text)
+
     except Exception as e:
         return jsonify({"error": f"Falha ao acessar URL: {e}"}), 500
 
     # 2) Se texto muito longo → resumir (mock por enquanto)
-    if len(full_text) > 3000:
+    #if len(full_text) > 3000:
         # MELHORAR ISSO AQUI
-        resumo = full_text[:500] + "..."
-    else:
-        resumo = full_text
+    resumo = full_text[:500] + "..."
+    #else:
+     #   resumo = full_text
 
     # 3) Validação (mock por enquanto, IA entra aqui depois)
     classificacao = "Possível Fake" if "!" in resumo else "Confiável"
